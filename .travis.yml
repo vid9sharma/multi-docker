@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t vidhusharma/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true vidhusharma/react-test npm test
+
+after_success:
+  - docker build -t vidhusharma/multi-client ./client
+  - docker build -t vidhusharma/multi-nginx ./nginx
+  - docker build -t vidhusharma/multi-server ./server
+  - docker build -t vidhusharma/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push vidhusharma/multi-client
+  - docker push vidhusharma/multi-nginx
+  - docker push vidhusharma/multi-server
+  - docker push vidhusharma/multi-worker
